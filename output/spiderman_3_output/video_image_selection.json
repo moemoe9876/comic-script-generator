@@ -1,0 +1,118 @@
+{
+  "selected_images": [
+    {
+      "page_number": 4,
+      "image_filename": "Marvel Team-Up 014-004.jpg",
+      "script_segment": "The story opens with Spider-Man in a desperate fight against Doctor Octopus, clearly on the losing end.",
+      "editorial_direction": "zoom_in_character",
+      "duration_seconds": 4.5,
+      "reasoning": "Establishes the initial conflict and shows Spider-Man in peril, creating an immediate hook for the viewer.",
+      "sequence_order": 1,
+      "local_path": "spiderman_3_output/selected_video_images/Marvel Team-Up 014-004.jpg"
+    },
+    {
+      "page_number": 5,
+      "image_filename": "Marvel Team-Up 014-005.jpg",
+      "script_segment": "Just as Doc Ock is about to finish him, Spider-Man is suddenly saved by a mysterious new hero, Invincible.",
+      "editorial_direction": "pan_left_to_right",
+      "duration_seconds": 5.0,
+      "reasoning": "A dynamic pan across the page introduces the crossover character and the inciting incident of the story.",
+      "sequence_order": 2,
+      "local_path": "spiderman_3_output/selected_video_images/Marvel Team-Up 014-005.jpg"
+    },
+    {
+      "page_number": 6,
+      "image_filename": "Marvel Team-Up 014-006.jpg",
+      "script_segment": "Their first interaction is cut short when a recovering Doc Ock sucker punches Invincible through a wall.",
+      "editorial_direction": "quick_cut",
+      "duration_seconds": 3.5,
+      "reasoning": "A fast cut to the punch adds to the chaos and shows that the threat is still active, raising the stakes.",
+      "sequence_order": 3,
+      "local_path": "spiderman_3_output/selected_video_images/Marvel Team-Up 014-006.jpg"
+    },
+    {
+      "page_number": 8,
+      "image_filename": "Marvel Team-Up 014-008.jpg",
+      "script_segment": "After they escape, Spider-Man lectures Invincible for using excessive force, causing the new hero to break down.",
+      "editorial_direction": "zoom_in_character",
+      "duration_seconds": 6.0,
+      "reasoning": "Shifts the tone from action to drama. A slow zoom on Invincible's face emphasizes the emotional weight of the moment.",
+      "sequence_order": 4,
+      "local_path": "spiderman_3_output/selected_video_images/Marvel Team-Up 014-008.jpg"
+    },
+    {
+      "page_number": 9,
+      "image_filename": "Marvel Team-Up 014-009.jpg",
+      "script_segment": "Invincible reveals his tragic backstory: he's from another dimension, hunted by a villain who is tormenting him and has his mother.",
+      "editorial_direction": "extended_hold",
+      "duration_seconds": 6.5,
+      "reasoning": "This is the core emotional beat of the story. An extended hold gives the audience time to absorb the heavy dialogue and stakes.",
+      "sequence_order": 5,
+      "local_path": "spiderman_3_output/selected_video_images/Marvel Team-Up 014-009.jpg"
+    },
+    {
+      "page_number": 11,
+      "image_filename": "Marvel Team-Up 014-011.jpg",
+      "script_segment": "Understanding his pain, Spider-Man agrees to team up with Invincible to take down Doctor Octopus together.",
+      "editorial_direction": "pan_top_to_bottom",
+      "duration_seconds": 5.0,
+      "reasoning": "Visually solidifies the team-up, showing both heroes ready for action and moving the plot forward.",
+      "sequence_order": 6,
+      "local_path": "spiderman_3_output/selected_video_images/Marvel Team-Up 014-011.jpg"
+    },
+    {
+      "page_number": 18,
+      "image_filename": "Marvel Team-Up 014-018.jpg",
+      "script_segment": "They track Doc Ock to the harbor, where he has laid a trap, terrorizing civilians to lure them out.",
+      "editorial_direction": "pan_left_to_right",
+      "duration_seconds": 5.5,
+      "reasoning": "Re-establishes the action and shows the scale of the threat, setting the stage for the final battle.",
+      "sequence_order": 7,
+      "local_path": "spiderman_3_output/selected_video_images/Marvel Team-Up 014-018.jpg"
+    },
+    {
+      "page_number": 20,
+      "image_filename": "Marvel Team-Up 014-020.jpg",
+      "script_segment": "During the fight, Invincible becomes enraged and, fed up with the villain's taunts, rips Doc Ock's mechanical arms apart.",
+      "editorial_direction": "static_hold",
+      "duration_seconds": 7.0,
+      "reasoning": "The visual climax of the story. A static hold on this shocking moment allows its full impact to land on the viewer.",
+      "sequence_order": 8,
+      "local_path": "spiderman_3_output/selected_video_images/Marvel Team-Up 014-020.jpg"
+    },
+    {
+      "page_number": 21,
+      "image_filename": "Marvel Team-Up 014-021.jpg",
+      "script_segment": "With Doc Ock defeated, a portal opens. It's time for Invincible to return to his dimension to continue his own fight.",
+      "editorial_direction": "slow_reveal",
+      "duration_seconds": 5.5,
+      "reasoning": "A slow reveal of the portal and the grateful police officer provides a moment of resolution before the final farewell.",
+      "sequence_order": 9,
+      "local_path": "spiderman_3_output/selected_video_images/Marvel Team-Up 014-021.jpg"
+    },
+    {
+      "page_number": 22,
+      "image_filename": "Marvel Team-Up 014-022.jpg",
+      "script_segment": "Invincible says his goodbyes and flies through the portal, but at the last second, Spider-Man impulsively tries to follow him.",
+      "editorial_direction": "pan_top_to_bottom",
+      "duration_seconds": 5.0,
+      "reasoning": "Shows the goodbye and Spider-Man's dramatic, last-second decision, creating a final moment of tension.",
+      "sequence_order": 10,
+      "local_path": "spiderman_3_output/selected_video_images/Marvel Team-Up 014-022.jpg"
+    },
+    {
+      "page_number": 23,
+      "image_filename": "Marvel Team-Up 014-023.jpg",
+      "script_segment": "The portal closes too fast. Left alone, Spider-Man reflects on the encounter and wishes his new friend well.",
+      "editorial_direction": "zoom_in_center",
+      "duration_seconds": 6.5,
+      "reasoning": "Provides a strong concluding image. A zoom into Spider-Man swinging away solo brings the story to a thoughtful close.",
+      "sequence_order": 11,
+      "local_path": "spiderman_3_output/selected_video_images/Marvel Team-Up 014-023.jpg"
+    }
+  ],
+  "video_flow_summary": "The video hooks viewers with Spider-Man losing to Doctor Octopus, then introduces Invincible's heroic rescue. It transitions to the emotional core, revealing Invincible's tragic multiverse backstory, which solidifies their team-up. The narrative builds to a climactic final battle where Invincible unleashes his true power. The story concludes with a bittersweet farewell as Invincible returns to his own dimension, leaving Spider-Man to reflect on their brief but impactful partnership.",
+  "total_estimated_duration": 65,
+  "editing_notes": "Use tense, action-oriented music for the fight scenes. Switch to a more somber, emotional track for the rooftop conversation on pages 8 and 9. Build back to a heroic, triumphant theme for the final battle and farewell. Pacing is key: quick cuts for action, and longer holds for emotional beats and major plot points like the arm-rip on page 20.",
+  "selected_images_directory": "spiderman_3_output/selected_video_images"
+}
