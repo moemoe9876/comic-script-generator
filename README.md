@@ -2,6 +2,8 @@
 
 This project is a modular system for converting comic books into engaging YouTube scripts. It consists of several specialized agents that work together to analyze comic book pages, understand the story, and generate compelling scripts.
 
+test
+
 ## Features
 
 - Image extraction from comic book archives (.cbr, .cbz)
