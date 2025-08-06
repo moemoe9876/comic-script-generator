@@ -83,12 +83,12 @@ def main(comic_path: str, output_dir: str):
         print(f"📊 Script word count: {script_word_count} words")
         print(f"📊 Summary word count: {summary_word_count} words")
         
-        if script_word_count < 350:
-            print(f"⚠️  Warning: Script is only {script_word_count} words (target: 350-450)")
-        elif script_word_count > 450:
-            print(f"⚠️  Warning: Script is {script_word_count} words (target: 350-450)")
+        if script_word_count < 300:
+            print(f"⚠️  Warning: Script is only {script_word_count} words (target: 300-350)")
+        elif script_word_count > 350:
+            print(f"⚠️  Warning: Script is {script_word_count} words (target: 300-350)")
         else:
-            print(f"✅ Script word count is within target range (350-450 words)")
+            print(f"✅ Script word count is within target range (300-350 words)")
 
         # --- Final Report Generation ---
         print("🚀 Starting: Generating comprehensive final report...")
@@ -105,8 +105,8 @@ def main(comic_path: str, output_dir: str):
             f.write("## 📊 Word Count\n\n")
             f.write(f"- **Script:** {script_word_count} words\n")
             f.write(f"- **Summary:** {summary_word_count} words\n")
-            f.write(f"- **Target Range:** 350-450 words for script\n")
-            if 350 <= script_word_count <= 450:
+            f.write(f"- **Target Range:** 300-350 words for script\n")
+            if 200 <= script_word_count <= 350:
                 f.write(f"- **Status:** ✅ Within target range\n\n")
             else:
                 f.write(f"- **Status:** ⚠️ Outside target range\n\n")

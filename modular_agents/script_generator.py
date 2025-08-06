@@ -55,7 +55,7 @@ class ScriptGenerator:
         **MUST FOLLOW INSTRUCTIONS BELOW**
 
         📏 **OPTIMAL SCRIPT LENGTH**
-        - Target: 200-300 words exactly (proven optimal for YouTube shorts)
+        - Target: 300-350 words exactly (proven optimal for YouTube shorts)
         - First 30 words must hook viewer attention
         - Maintain steady pacing throughout
         - End with strong resolution in final 30-40 words
@@ -198,12 +198,11 @@ Example 19 - "How Did Joker Escape From The Chair? #batman #shorts":
         ---
         **COMIC STORY TO ADAPT:**
         {story_summary}
-        {transcript_context}
         ---
 
         Generate:
-        **WORD COUNT CHECK:** Count your words before finalizing. Must be 200-300 words exactly.
-        **SCRIPT:** [Your complete 200-300 word script draft - count every word]
+        **WORD COUNT CHECK:** Count your words before finalizing. Must be 300-350 words exactly.
+        **SCRIPT:** [Your complete 300-350 word script draft - count every word]
         **TITLE SUGGESTIONS:** [3-5 title suggestions]
         **FINAL WORD COUNT:** [State the exact word count of your script]
         """
@@ -251,7 +250,6 @@ If -o is omitted, the script will print JSON to standard output.
 """
     )
     parser.add_argument("summary_file", nargs='?', default=None, help="Path to the story summary file (e.g., 'output/comic_name/summary.txt'). If not provided, an empty summary is used.")
-    parser.add_argument("-t", "--transcript", help="Path to an optional transcript file for context.")
     parser.add_argument("-o", "--output", help="Name for the output directory. If not provided, a directory will be created based on the summary file name or a default name.")
 
     args = parser.parse_args()
@@ -268,17 +266,8 @@ If -o is omitted, the script will print JSON to standard output.
             with open(summary_path, 'r', encoding='utf-8') as f:
                 summary = f.read()
 
-        transcript_content = None
-        if args.transcript:
-            transcript_path = Path(args.transcript)
-            if not transcript_path.is_file():
-                print(f"Error: Transcript file not found at {transcript_path}", file=sys.stderr)
-                sys.exit(1)
-            with open(transcript_path, 'r', encoding='utf-8') as f:
-                transcript_content = f.read()
-
         generator = ScriptGenerator()
-        result = generator.generate_script(summary, transcript=transcript_content)
+        result = generator.generate_script(summary)
 
         output_dir_name = args.output
         if not output_dir_name:
