@@ -33,3 +33,7 @@ py_env/
 # OS
 .DS_Store
 Thumbs.db
+
+# Comic archive files
+*.cbr
+*.cbz

@@ -35,13 +35,40 @@ class ScriptGenerator:
         Returns:
             Dict[str, str]: Dictionary containing the script, title suggestions, and word count
         """
+        # Optional transcript section - you can manually paste YouTube video transcripts here
+        transcript_section = """
+        
+        **OPTIONAL YOUTUBE TRANSCRIPT CONTEXT:**
+        
+        [PASTE YOUTUBE VIDEO TRANSCRIPT HERE IF AVAILABLE]
+        
+        If you have a YouTube video transcript about this comic, paste it between these markers:
+        
+        ---TRANSCRIPT START---
+        
+        [PASTE YOUR TRANSCRIPT HERE - DELETE THIS LINE AND REPLACE WITH ACTUAL TRANSCRIPT]
+        
+        ---TRANSCRIPT END---
+        
+        INSTRUCTIONS FOR TRANSCRIPT USAGE:
+        - If a transcript is provided above, use it as your PRIMARY source for story context
+        - Extract the most compelling story beats and character moments from the transcript
+        - The transcript should take PRECEDENCE over the story summary below when there are conflicts
+        - Use the transcript to understand the emotional weight and significance of events
+        - Focus on the narrative elements that the YouTube creator emphasized as important
+        - If NO transcript is provided above, rely on the story summary as usual
+        
+        """
+        
         prompt = f"""
         
         --
         You are an expert YouTube scriptwriter specializing in comic book summaries. Your goal is to convert a story analysis into an engaging, fast-paced script. Follow these steps precisely.
         
+        {transcript_section}
+        
         **CRITICAL INSTRUCTION - READ THIS FIRST:**
-        You MUST use ONLY the story provided below. DO NOT use any other Marvel stories from your training data. DO NOT improvise or add characters/events not mentioned in the provided story. Stick strictly to the actual comic book story given to you.
+        You MUST use ONLY the story provided below and any transcript provided above. DO NOT use any other Marvel stories from your training data. DO NOT improvise or add characters/events not mentioned in the provided sources. Stick strictly to the actual comic book story given to you.
 
 
         - Third-person narrative, present tense
