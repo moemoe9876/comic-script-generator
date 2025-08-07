@@ -1,7 +1,11 @@
-# Ignore comics and output folders
+# Sensitive and configuration files
+.env
+.env.*
+
+# Project specific directories
 comics/
 output/
-
+.github/
 
 # Python
 __pycache__/
@@ -14,14 +18,17 @@ __pycache__/
 env/
 venv/
 ENV/
+*venv*/
+virtualenv/
+python_env/
+py_env/
+.Python
+.python-version
 
 # VS Code
 .vscode/
 *.code-workspace
 
-# Outputs
-output/
-pipeline_output/
 
 # OS
 .DS_Store
