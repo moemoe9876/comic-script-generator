@@ -14,6 +14,14 @@ class ScriptGenerator:
     Generates a YouTube script from a story summary.
     """
     def __init__(self, model_name: str = None, temperature: float | None = None):
+        """
+        Initialize the ScriptGenerator.
+        
+        Args:
+            model_name: Model name to use for script generation. If None, uses default.
+                       This is the only agent that respects user model selection.
+            temperature: Creativity level for script generation. If None, uses default 0.5.
+        """
         genai.configure(api_key=config.GEMINI_API_KEY)
         generation_config = genai.types.GenerationConfig(
             temperature=(temperature if temperature is not None else 0.5),  # Configurable creativity
@@ -21,8 +29,14 @@ class ScriptGenerator:
             top_k=40,        # Consider more token options
             max_output_tokens=4096,
         )
+        # Use the user-selected model or default script model
+        selected_model = model_name or config.DEFAULT_SCRIPT_MODEL
+        
+        # Store the model name for logging/debugging purposes
+        self.model_name = selected_model
+        
         self.model = genai.GenerativeModel(
-            model_name or config.GENERATIVE_MODEL_NAME,
+            selected_model,
             generation_config=generation_config
         )
 

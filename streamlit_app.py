@@ -223,7 +223,7 @@ def main():
         
         # Model selection
         model_name = st.selectbox(
-            "Gemini Model",
+            "Gemini Model for Script Generation",
             options=[
                 "gemini-2.0-flash-lite",
                 "gemini-2.0-flash", 
@@ -232,8 +232,20 @@ def main():
                 "gemini-2.5-pro"
             ],
             index=4,  # Default to gemini-2.5-pro
-            help="Choose the Gemini model to use for processing"
+            help="Choose the Gemini model for script generation only. Other processing uses gemini-2.0-flash."
         )
+        
+        # Model usage explanation
+        with st.expander("ℹ️ Model Usage Information"):
+            st.markdown("""
+            **Script Generator:** Uses your selected model above for creative script writing.
+            
+            **Fixed Components (Always use gemini-2.0-flash):**
+            - 📖 **Page Analyzer:** Analyzes comic pages and extracts story elements
+            - 📝 **Story Summarizer:** Creates comprehensive story summaries
+            
+            This ensures consistent analysis quality while allowing creative flexibility for script generation.
+            """)
         
         st.markdown("---")
         
@@ -416,28 +428,65 @@ def main():
                             selected_model = st.session_state.get('model_name')
                             temperature = st.session_state.get('generation_temperature')
                             
+                            # Validate model selection
+                            valid_models = [
+                                "gemini-2.0-flash-lite",
+                                "gemini-2.0-flash", 
+                                "gemini-2.5-flash-lite",
+                                "gemini-2.5-flash",
+                                "gemini-2.5-pro"
+                            ]
+                            
+                            # Handle edge cases for model selection
+                            if not selected_model or selected_model.strip() == "":
+                                st.warning("⚠️ No model selected. Using default model for script generation.")
+                                selected_model = None  # Will use default in ScriptGenerator
+                            elif selected_model not in valid_models:
+                                st.error(f"❌ Invalid model selected: {selected_model}. Using default model.")
+                                selected_model = None  # Will use default in ScriptGenerator
+                            
+                            # Validate temperature
+                            if temperature is None or not isinstance(temperature, (int, float)):
+                                st.warning("⚠️ Invalid temperature setting. Using default value (0.5).")
+                                temperature = 0.5
+                            elif not (0.1 <= temperature <= 1.0):
+                                st.warning(f"⚠️ Temperature {temperature} out of range. Clamping to valid range.")
+                                temperature = max(0.1, min(1.0, temperature))
+                            
                             # Log processing parameters to terminal
                             print(f"\n🚀 PROCESSING STARTED:")
-                            print(f"📊 Selected Model: {selected_model}")
+                            print(f"📊 Selected Model for Script Generation: {selected_model or 'default (gemini-2.5-pro)'}")
+                            print(f"🔒 Fixed Models: gemini-2.0-flash (PageAnalyzer, StorySummarizer)")
                             print(f"🎯 Word Target: {target_word_count_min} - {target_word_count_max} words")
                             print(f"🌡️  Temperature: {temperature}")
                             
-                            coordinator = MainCoordinator(
-                                model_name=selected_model,
-                                temperature=temperature
-                            )
+                            try:
+                                coordinator = MainCoordinator(
+                                    model_name=selected_model,  # Only affects ScriptGenerator
+                                    temperature=temperature
+                                )
+                            except Exception as e:
+                                st.error(f"❌ Failed to initialize processing coordinator: {str(e)}")
+                                st.stop()
                             
                             # Log actual models being used for API calls
-                            print(f"🔧 Actual model used for API calls: {coordinator.get_actual_model_name()}")
+                            print(f"🔧 Model Configuration: {coordinator.get_actual_model_name()}")
                             
-                            # Process the comic with transcript if provided
-                            result = coordinator.process_comic(
-                                extract_dir, 
-                                output_dir, 
-                                st.session_state.get('transcript_text', ''),
-                                target_word_count_min,
-                                target_word_count_max
-                            )
+                            # Process the comic with enhanced error handling
+                            try:
+                                result = coordinator.process_comic(
+                                    extract_dir, 
+                                    output_dir, 
+                                    st.session_state.get('transcript_text', ''),
+                                    target_word_count_min,
+                                    target_word_count_max
+                                )
+                            except Exception as processing_error:
+                                st.error(f"❌ Processing failed with exception: {str(processing_error)}")
+                                st.error("This could be due to API rate limits, network issues, or invalid API keys.")
+                                st.info("💡 Please check your Gemini API key and try again.")
+                                st.exception(processing_error)
+                                return
                             
                             if result and result.get('success'):
                                 # Store results in session state
@@ -446,11 +495,14 @@ def main():
                                 if 'story_summary' in result:
                                     st.session_state['story_summary'] = result['story_summary']
                                 
-                                # Try to read the report file if it exists
-                                report_file = result['output_files'].get('report')
-                                if report_file and os.path.exists(report_file):
-                                    with open(report_file, 'r', encoding='utf-8') as f:
-                                        st.session_state['generated_report'] = f.read()
+                                # Try to read the report file if it exists with error handling
+                                try:
+                                    report_file = result['output_files'].get('report')
+                                    if report_file and os.path.exists(report_file):
+                                        with open(report_file, 'r', encoding='utf-8') as f:
+                                            st.session_state['generated_report'] = f.read()
+                                except Exception as report_error:
+                                    st.warning(f"⚠️ Could not load report file: {str(report_error)}")
                                 
                                 st.session_state['processing_complete'] = True
                                 st.success("✅ Comic processing completed successfully!")

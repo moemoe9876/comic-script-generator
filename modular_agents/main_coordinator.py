@@ -16,18 +16,33 @@ class MainCoordinator:
     Coordinates the entire comic-to-script pipeline.
     """
     def __init__(self, model_name=None, temperature: float | None = None):
-        self.model_name = model_name  # Store the provided model name
-        self.image_extractor = ImageExtractor()
-        self.page_analyzer = PageAnalyzer(model_name=model_name)
-        self.story_summarizer = StorySummarizer(model_name=model_name)
+        """
+        Initialize the MainCoordinator.
+        
+        Args:
+            model_name: Model name to use ONLY for ScriptGenerator. The other agents 
+                       (ImageExtractor, PageAnalyzer, StorySummarizer) always use 
+                       gemini-2.0-flash as hardcoded per system requirements.
+            temperature: Temperature setting ONLY for ScriptGenerator.
+        """
+        self.script_model_name = model_name  # Store only for ScriptGenerator
+        
+        # Initialize agents with proper model assignment
+        self.image_extractor = ImageExtractor()  # No model needed
+        
+        # These three agents always use gemini-2.0-flash (hardcoded)
+        # The model_name parameter is ignored by these agents
+        self.page_analyzer = PageAnalyzer(model_name=None)  # Ignored - uses FIXED_MODEL_NAME
+        self.story_summarizer = StorySummarizer(model_name=None)  # Ignored - uses FIXED_MODEL_NAME
+        
+        # Only ScriptGenerator uses the user-selected model
         self.script_generator = ScriptGenerator(model_name=model_name, temperature=temperature)
     
     def get_actual_model_name(self) -> str:
         """
-        Returns the actual model name being used for API calls.
-        If no model_name was provided, returns the default from config.
+        Returns information about the models being used by different agents.
         """
-        return self.model_name if self.model_name else config.GENERATIVE_MODEL_NAME
+        return f"ScriptGenerator: {self.script_model_name or config.DEFAULT_SCRIPT_MODEL}, Fixed agents (PageAnalyzer, StorySummarizer): {config.FIXED_MODEL_NAME}"
     
     def process_comic(self, comic_path: str, output_dir: str, youtube_transcript: str = "", target_min_words: int = 300, target_max_words: int = 350) -> dict:
         """
@@ -44,7 +59,8 @@ class MainCoordinator:
         try:
             # Log the actual processing details
             print(f"📋 PROCESSING DETAILS:")
-            print(f"   • Model for API calls: {self.get_actual_model_name()}")
+            print(f"   • ScriptGenerator model: {self.script_model_name or config.DEFAULT_SCRIPT_MODEL}")
+            print(f"   • Fixed agents model (PageAnalyzer, StorySummarizer): {config.FIXED_MODEL_NAME}")
             print(f"   • Word target range: {target_min_words} - {target_max_words}")
             print(f"   • YouTube transcript: {'Yes' if youtube_transcript.strip() else 'No'}")
             print(f"   • Comic path: {comic_path}")

@@ -21,7 +21,8 @@ class PageAnalyzer:
         Args:
             batch_size: Optional batch size for processing multiple pages. If None,
                        will be calculated based on available CPU cores.
-            model_name: Optional model name to override the default.
+            model_name: This parameter is ignored. PageAnalyzer always uses gemini-2.0-flash
+                       as per system requirements to ensure consistent analysis quality.
         """
         genai.configure(api_key=config.GEMINI_API_KEY)
         # Configure model with low temperature to reduce hallucinations
@@ -31,8 +32,9 @@ class PageAnalyzer:
             top_k=40,
             max_output_tokens=2048,
         )
+        # Always use the fixed model for page analysis - hardcoded as per requirements
         self.model = genai.GenerativeModel(
-            model_name or config.GENERATIVE_MODEL_NAME,
+            config.FIXED_MODEL_NAME,  # Always "gemini-2.0-flash"
             generation_config=generation_config
         )
         self.batch_size = batch_size
