@@ -1,7 +1,11 @@
 # Core dependencies for Comic Script Generator
 google-generativeai>=0.8.0
 python-dotenv>=1.0.0
-
+streamlit>=1.28.0
+plotly>=5.17.0
+pillow>=10.0.0
+rarfile>=4.0
+zipfile-deflate64>=0.2.0
 # Optional dependencies for comic extraction
 rarfile>=4.0
 py7zr>=0.20.0

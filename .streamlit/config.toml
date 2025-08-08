@@ -1,0 +1,15 @@
+[server]
+headless = false
+port = 8501
+enableCORS = false
+enableXsrfProtection = false
+
+[browser]
+gatherUsageStats = false
+
+[logger]
+level = "error"
+
+[client]
+showErrorDetails = false
+toolbarMode = "minimal"

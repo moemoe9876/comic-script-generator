@@ -5,13 +5,13 @@ from typing import List, Dict, Any
 
 import google.generativeai as genai
 
-import config
+from . import config
 
 class StorySummarizer:
     """
     Generates a story summary from a list of page analyses.
     """
-    def __init__(self):
+    def __init__(self, model_name: str = None):
         genai.configure(api_key=config.GEMINI_API_KEY)
         # Configure model with low temperature to reduce hallucinations
         generation_config = genai.types.GenerationConfig(
@@ -21,7 +21,7 @@ class StorySummarizer:
             max_output_tokens=8192,
         )
         self.model = genai.GenerativeModel(
-            config.GENERATIVE_MODEL_NAME,
+            model_name or config.GENERATIVE_MODEL_NAME,
             generation_config=generation_config
         )
 

@@ -8,19 +8,20 @@ from tqdm import tqdm
 
 import google.generativeai as genai
 
-import config
+from . import config
 
 class PageAnalyzer:
     """
     Analyzes comic book pages using the Gemini API, with support for parallel processing.
     """
-    def __init__(self, batch_size: int = None):
+    def __init__(self, batch_size: int = None, model_name: str = None):
         """
         Initialize the PageAnalyzer with optional batch size for parallel processing.
         
         Args:
             batch_size: Optional batch size for processing multiple pages. If None,
                        will be calculated based on available CPU cores.
+            model_name: Optional model name to override the default.
         """
         genai.configure(api_key=config.GEMINI_API_KEY)
         # Configure model with low temperature to reduce hallucinations
@@ -31,7 +32,7 @@ class PageAnalyzer:
             max_output_tokens=2048,
         )
         self.model = genai.GenerativeModel(
-            config.GENERATIVE_MODEL_NAME,
+            model_name or config.GENERATIVE_MODEL_NAME,
             generation_config=generation_config
         )
         self.batch_size = batch_size
@@ -57,12 +58,14 @@ class PageAnalyzer:
             }
 
             prompt = f"""Analyze comic book page {page_number} of {total_pages}.
-            Extract the key information and return it as a JSON object.
+            First determine if this page is part of the actual comic story or a non-story page, then extract key information.
 
             **JSON Schema:**
             {{
               "page": {page_number},
-              "setting": "A brief description of the location and environment.",
+              "is_story_page": true/false,
+              "page_type": "story|credits|advertisement|title|table_of_contents|testimonial|editorial|copyright|blank|other",
+              "setting": "A brief description of the location and environment (only for story pages).",
               "characters_present": ["Character A", "Character B"],
               "key_actions_or_events": [
                 "A summary of the most important action on the page.",
@@ -71,9 +74,19 @@ class PageAnalyzer:
               "key_dialogue_summary": "A summary of the most important dialogue, capturing the core intent."
             }}
 
-            **Rules:**
-            - Provide only the JSON object in your response.
-            - If a field is not applicable, use an empty string or empty list.
+            **Page Classification Rules:**
+            - **Story Pages:** Contain comic panels with narrative content, characters in action, dialogue, or story progression
+            - **Non-Story Pages:** Credits, advertisements, testimonials, author notes, copyright pages, table of contents, blank pages, editorial content, publisher information, character bios outside the main story
+
+            **Story Content Rules:**
+            - Only extract setting, characters, actions, and dialogue for pages marked as "is_story_page": true
+            - For non-story pages, leave story fields empty or use empty arrays
+            - Be conservative: if unsure whether a page is story content, mark it as non-story
+
+            **Response Rules:**
+            - Provide only the JSON object in your response
+            - If a field is not applicable, use an empty string or empty list
+            - Always include the is_story_page and page_type fields
 
             Here is the image of the page:"""
 
@@ -134,6 +147,37 @@ class PageAnalyzer:
                     pbar.update(1)
         
         return all_analyses
+
+    def filter_story_pages(self, all_analyses: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        Filters out non-story pages from the analysis results.
+        
+        Args:
+            all_analyses: List of page analysis results
+            
+        Returns:
+            List of only story page analyses
+        """
+        story_pages = []
+        filtered_count = 0
+        
+        for analysis in all_analyses:
+            # Skip pages with errors
+            if "error" in analysis:
+                continue
+                
+            # Check if this is a story page
+            is_story = analysis.get("is_story_page", True)  # Default to True for backward compatibility
+            
+            if is_story:
+                story_pages.append(analysis)
+            else:
+                filtered_count += 1
+                page_type = analysis.get("page_type", "unknown")
+                print(f"Filtered out page {analysis.get('page', 'unknown')} (type: {page_type})")
+        
+        print(f"📖 Story pages: {len(story_pages)}, Non-story pages filtered: {filtered_count}")
+        return story_pages
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:

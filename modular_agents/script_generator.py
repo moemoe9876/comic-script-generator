@@ -1,65 +1,74 @@
 # modular_agents/script_generator.py
 import sys
 import json
-from typing import Dict
+from typing import Dict, Tuple
 
 import google.generativeai as genai
 
-import config
+from . import config
+from .word_utils import count_words
 
 
 class ScriptGenerator:
     """
     Generates a YouTube script from a story summary.
     """
-    def __init__(self):
+    def __init__(self, model_name: str = None, temperature: float | None = None):
         genai.configure(api_key=config.GEMINI_API_KEY)
         generation_config = genai.types.GenerationConfig(
-            temperature=0.7,  # Higher temperature for more creative outputs
-            top_p=0.9,       # Allow more diverse token selections
+            temperature=(temperature if temperature is not None else 0.5),  # Configurable creativity
+            top_p=0.1,       # Allow more diverse token selections
             top_k=40,        # Consider more token options
             max_output_tokens=4096,
         )
         self.model = genai.GenerativeModel(
-            config.GENERATIVE_MODEL_NAME,
+            model_name or config.GENERATIVE_MODEL_NAME,
             generation_config=generation_config
         )
 
-    def generate_script(self, story_summary: str) -> Dict[str, str]:
+    def generate_script(self, story_summary: str, youtube_transcript: str = "", target_min_words: int = 300, target_max_words: int = 350) -> Dict[str, str]:
         """
         Generates a YouTube script from a story summary using advanced narrative techniques.
         
         Args:
             story_summary (str): The comic story to adapt into a script
+            youtube_transcript (str): Optional YouTube video transcript for additional context
+            target_min_words (int): Minimum target word count for the script
+            target_max_words (int): Maximum target word count for the script
             
         Returns:
             Dict[str, str]: Dictionary containing the script, title suggestions, and word count
         """
-        # Optional transcript section - you can manually paste YouTube video transcripts here
-        transcript_section = """
+        # Dynamic transcript section based on whether transcript is provided
+        transcript_section = ""
+        if youtube_transcript and youtube_transcript.strip():
+            transcript_section = f"""
         
-        **OPTIONAL YOUTUBE TRANSCRIPT CONTEXT:**
-        
-        [PASTE YOUTUBE VIDEO TRANSCRIPT HERE IF AVAILABLE]
-        
-        If you have a YouTube video transcript about this comic, paste it between these markers:
+        **YOUTUBE TRANSCRIPT CONTEXT PROVIDED:**
         
         ---TRANSCRIPT START---
-        
-        [PASTE YOUR TRANSCRIPT HERE - DELETE THIS LINE AND REPLACE WITH ACTUAL TRANSCRIPT]
-        
+        {youtube_transcript.strip()}
         ---TRANSCRIPT END---
         
         INSTRUCTIONS FOR TRANSCRIPT USAGE:
-        - If a transcript is provided above, use it as your PRIMARY source for story context
+        - Use the transcript above as your source for story context
         - Extract the most compelling story beats and character moments from the transcript
-        - The transcript should take PRECEDENCE over the story summary below when there are conflicts
+        - The transcript should inform the script but not dictate it
         - Use the transcript to understand the emotional weight and significance of events
         - Focus on the narrative elements that the YouTube creator emphasized as important
-        - If NO transcript is provided above, rely on the story summary as usual
+        - Combine insights from both the transcript and story summary for the most complete narrative
+        
+        """
+        else:
+            transcript_section = """
+        
+        **NO TRANSCRIPT PROVIDED:**
+        - Use the story summary below as your primary source for story context
+        - Focus on the narrative elements and character development from the comic analysis
         
         """
         
+        # Build primary prompt with strict word target enforcement
         prompt = f"""
         
         --
@@ -67,8 +76,17 @@ class ScriptGenerator:
         
         {transcript_section}
         
-        **CRITICAL INSTRUCTION - READ THIS FIRST:**
-        You MUST use ONLY the story provided below and any transcript provided above. DO NOT use any other Marvel stories from your training data. DO NOT improvise or add characters/events not mentioned in the provided sources. Stick strictly to the actual comic book story given to you.
+    **CRITICAL INSTRUCTION - READ THIS FIRST:**
+    You MUST use ONLY the story provided below and any transcript provided above. DO NOT use any other Marvel stories from your training data. DO NOT improvise or add characters/events not mentioned in the provided sources. Stick strictly to the actual comic book story given to you.
+
+    **COVERAGE GUARANTEE (MANDATORY):**
+    - The final SCRIPT must encompass EVERY distinct event, plot beat, and key character moment from the STORY SUMMARY (and transcript, if provided).
+    - Do NOT omit events. If word budget is tight, compress phrasing but still mention each event at least once.
+    - Maintain the chronological order of the STORY SUMMARY when possible so no beats are skipped.
+    - If transcript details conflict with the summary, prefer the SUMMARY for sequencing and facts; you may incorporate transcript flavor without losing any SUMMARY events.
+    - Perform a silent self-check before finalizing: if any SUMMARY event is missing from the SCRIPT, revise the SCRIPT to include it.
+
+    OUTPUT FORMAT REQUIREMENT: Only output the requested sections below. Do NOT output your internal planning, lists, or checklists.
 
 
         - Third-person narrative, present tense
@@ -81,12 +99,13 @@ class ScriptGenerator:
         
         **MUST FOLLOW INSTRUCTIONS BELOW**
 
-        📏 **OPTIMAL SCRIPT LENGTH**
-        - Target: 300-350 words exactly (proven optimal for YouTube shorts)
+    📏 **STRICT SCRIPT LENGTH (MANDATORY)**
+    - Target window: {target_min_words}-{target_max_words} words inclusive
+    - Hard limit: Do not exceed {target_max_words} words and do not go under {target_min_words} words
         - First 30 words must hook viewer attention
         - Maintain steady pacing throughout
         - End with strong resolution in final 30-40 words
-        - Count words carefully as you write
+    - Count words carefully as you write and revise until within the window
         
         🎯 **STORY ARCHITECTURE**
         - Opening Hook (10-15% of word count)
@@ -140,7 +159,7 @@ class ScriptGenerator:
            - Tone matches the emotional context of the story
            - Never break the fourth wall or address the reader directly
 
-        📚 **STORY STRUCTURE REQUIREMENTS**:
+    📚 **STORY STRUCTURE REQUIREMENTS**:
            - OPENING: Hook viewers with the initial conflict/setup (2-3 sentences)
            - DEVELOPMENT: Cover all major plot points in chronological order
            - CHARACTER MOMENTS: Include key character interactions and emotional beats
@@ -155,12 +174,21 @@ class ScriptGenerator:
            - NO passive voice overuse
            - NO skipping major story elements to save word count
         
-        ✅ Use appropriately emotional language when needed — convey deep feelings without being melodramatic
-        ✅ Flow seamlessly from sentence to sentence
-        ✅ Build emotional tension throughout the narrative
-        ✅ Include specific comic book details and character actions
-        ✅ End with emotional impact that resonates beyond the video
-        ✅ Ensure every major plot point from the story summary is covered
+    ✅ Use appropriately emotional language when needed — convey deep feelings without being melodramatic
+    ✅ Flow seamlessly from sentence to sentence
+    ✅ Build emotional tension throughout the narrative
+    ✅ Include specific comic book details and character actions
+    ✅ End with emotional impact that resonates beyond the video
+    ✅ Ensure every major plot point from the story summary is covered (no omissions)
+
+    🎙️ **STYLE ENFORCEMENT — WRITE LIKE THE EXAMPLES**
+    - Treat the examples below as your style guide. Emulate their rhythm, tone, and flow without copying sentences.
+    - Start with a punchy hook or bold claim/question, then move chronologically through events.
+    - Sentence cadence: mix short, punchy sentences with longer descriptive ones; frequently use transitions like "And while...", "But when...", "And after...", "Only for..." as in the examples.
+    - Paragraphing: 4–6 concise paragraphs mapping to Hook, Rising Action, Climax, Resolution, and a closing beat.
+    - Diction: simple, conversational, active voice; avoid high-register words and euphemisms; no dialogue quotes; no SFX.
+    - Compression: mention every plot beat from the summary; when space is tight, compress with efficient clauses instead of dropping beats.
+    - Do not imitate phrasing verbatim; replicate structure, pacing, and transitions only.
         --
         **SUCCESSFUL SCRIPT EXAMPLES:**
 
@@ -227,39 +255,79 @@ Example 19 - "How Did Joker Escape From The Chair? #batman #shorts":
         {story_summary}
         ---
 
-        Generate:
-        **WORD COUNT CHECK:** Count your words before finalizing. Must be 300-350 words exactly.
-        **SCRIPT:** [Your complete 300-350 word script draft - count every word]
+    Generate:
+        **WORD COUNT CHECK:** Count your words before finalizing. Must be between {target_min_words} and {target_max_words} words inclusive. If not within range, revise silently and re-check before output.
+        **SCRIPT:** [Your complete {target_min_words}-{target_max_words} word script draft - count every word]
         **TITLE SUGGESTIONS:** [3-5 title suggestions]
         **FINAL WORD COUNT:** [State the exact word count of your script]
         """
 
         response = self.model.generate_content(prompt)
         raw_text = response.text
-        
-        try:
-            script_part = raw_text.split("**SCRIPT:**")[1].split("**TITLE SUGGESTIONS:**")[0].strip()
-            titles_part = raw_text.split("**TITLE SUGGESTIONS:**")[1].split("**FINAL WORD COUNT:**")[0].strip()
-            
-            # Try to extract word count if present
-            word_count = "Not specified"
-            if "**FINAL WORD COUNT:**" in raw_text:
+
+        def _parse_response(text: str) -> Tuple[str, str, int]:
+            """Extract script, titles and robust word count from model output."""
+            try:
+                script_body = text.split("**SCRIPT:**", 1)[1].split("**TITLE SUGGESTIONS:**", 1)[0].strip()
+                titles_body = text.split("**TITLE SUGGESTIONS:**", 1)[1].split("**FINAL WORD COUNT:**", 1)[0].strip()
+            except Exception:
+                # Fallback: if markers missing, treat whole text as script
+                script_body = text.strip()
+                titles_body = ""
+            wc = count_words(script_body)
+            return script_body, titles_body, wc
+
+        script_part, titles_part, wc = _parse_response(raw_text)
+
+        # Enforce target range with up to 3 revision attempts
+        attempts = 0
+        max_attempts = 3
+        while (wc < target_min_words or wc > target_max_words) and attempts < max_attempts:
+            attempts += 1
+            adjust_instruction = f"""
+Revise the following SCRIPT to fall strictly within {target_min_words}-{target_max_words} words without adding new plot points or removing any from the STORY SUMMARY. Keep structure and tone the same. Compress or expand sentences as needed. Return only the revised SCRIPT body, no titles, no extra sections.
+
+STORY SUMMARY:
+{story_summary}
+
+CURRENT SCRIPT ({wc} words):
+{script_part}
+"""
+            revision_response = self.model.generate_content(adjust_instruction)
+            revised_text = revision_response.text.strip()
+
+            # Some models might echo markers; strip if present
+            if "**SCRIPT:**" in revised_text:
                 try:
-                    word_count = raw_text.split("**FINAL WORD COUNT:**")[1].strip().split('\n')[0].strip()
-                except:
-                    word_count = "Could not extract"
-            
-            return {
-                "script": script_part,
-                "title_suggestions": titles_part,
-                "word_count": word_count
-            }
-        except IndexError:
-            return {
+                    revised_text = revised_text.split("**SCRIPT:**", 1)[1].strip()
+                except Exception:
+                    pass
+
+            script_part = revised_text
+            wc = count_words(script_part)
+
+        # Final safety trim if still over max
+        if wc > target_max_words:
+            words = script_part.split()
+            script_part = " ".join(words[:target_max_words])
+            wc = target_max_words
+
+        # Package result, prefer our computed word count
+        result = {
+            "script": script_part,
+            "title_suggestions": titles_part if titles_part else "",
+            "word_count": str(wc)
+        }
+
+        # If initial parse failed badly, provide raw for debugging
+        if not script_part:
+            result.update({
                 "script": "Error: Could not parse the script from the model's response.",
-                "title_suggestions": "No titles generated.",
+                "title_suggestions": titles_part or "No titles generated.",
                 "raw_response": raw_text
-            }
+            })
+
+        return result
 
 if __name__ == '__main__':
     import argparse
