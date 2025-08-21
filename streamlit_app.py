@@ -213,13 +213,7 @@ def main():
             help="Higher values = more creative but less consistent. 0.5 is optimal for script generation."
         )
         
-        max_pages = st.number_input(
-            "Max Pages to Process", 
-            min_value=1, 
-            max_value=100, 
-            value=50,
-            help="Limit processing for large comics"
-        )
+    # NOTE: Removed 'Max Pages to Process' limit — all pages will be processed
         
         # Model selection
         model_name = st.selectbox(
@@ -305,11 +299,11 @@ def main():
 
         # Target word count range
         target_word_count_min = st.number_input(
-            "Target Min Word Count", min_value=50, max_value=1000, value=300, step=10,
+            "Target Min Word Count", min_value=50, max_value=1000, value=200, step=10,
             help="Minimum target word count for generated script"
         )
         target_word_count_max = st.number_input(
-            "Target Max Word Count", min_value=target_word_count_min, max_value=2000, value=max(350, target_word_count_min), step=10,
+            "Target Max Word Count", min_value=target_word_count_min, max_value=2000, value=max(250, target_word_count_min), step=10,
             help="Maximum target word count for generated script"
         )
         
@@ -348,7 +342,7 @@ def main():
         # Store in session state
         st.session_state['uploaded_file'] = uploaded_file
         st.session_state['generation_temperature'] = generation_temperature
-        st.session_state['max_pages'] = max_pages
+    # No max_pages stored anymore — process all extracted pages
         st.session_state['transcript_text'] = transcript_text if use_transcript else ""
         st.session_state['max_preview_pages'] = max_preview_pages
         st.session_state['quality_settings'] = image_quality
@@ -412,10 +406,7 @@ def main():
                             else:
                                 st.info("📖 Image preview disabled - skipping to processing...")
                             
-                            # Limit pages if needed
-                            if len(image_files) > st.session_state['max_pages']:
-                                image_files = image_files[:st.session_state['max_pages']]
-                                st.warning(f"Processing limited to first {st.session_state['max_pages']} pages")
+                            # No page limit: process all extracted pages
                             
                             # Process with MainCoordinator
                             st.info("🤖 Analyzing comic pages...")
@@ -494,6 +485,9 @@ def main():
                                 
                                 if 'story_summary' in result:
                                     st.session_state['story_summary'] = result['story_summary']
+
+                                if 'selected_pages' in result:
+                                    st.session_state['selected_pages'] = result['selected_pages']
                                 
                                 # Try to read the report file if it exists with error handling
                                 try:
@@ -523,9 +517,26 @@ def main():
                 
                 script_data = st.session_state['generated_script']
                 
+                # Display selected pages if available
+                if 'selected_pages' in st.session_state:
+                    st.markdown("#### 🖼️ Selected Pages for Video (page number + script text chunk)")
+                    selected_pages = st.session_state['selected_pages']
+
+                    if selected_pages:
+                        for pair in selected_pages:
+                            page_num = pair.get('page_number')
+                            text_chunk = pair.get('text')
+
+                            # Show the mapping with a nice layout
+                            st.markdown(f"**Page {page_num}**")
+                            st.write(text_chunk)
+                            st.markdown("---")
+                    else:
+                        st.warning("No page-text pairs were selected.")
+
                 # Display script
                 if 'script' in script_data:
-                    st.markdown("#### � YouTube Script")
+                    st.markdown("#### ✍️ YouTube Script")
                     
                     # Use a clean container for the script
                     with st.container():
@@ -611,7 +622,7 @@ def main():
                 st.markdown("---")
                 if st.button("🔄 Process Another Comic", type="secondary"):
                     # Clear session state for new processing
-                    for key in ['processing_started', 'processing_complete', 'generated_script', 'generated_report', 'story_summary']:
+                    for key in ['processing_started', 'processing_complete', 'generated_script', 'generated_report', 'story_summary', 'selected_pages']:
                         if key in st.session_state:
                             del st.session_state[key]
                     st.rerun()

@@ -9,6 +9,7 @@ from .image_extractor import ImageExtractor
 from .page_analyzer import PageAnalyzer
 from .story_summarizer import StorySummarizer
 from .script_generator import ScriptGenerator
+from .image_selector import ImageSelector
 from .word_utils import count_words
 
 class MainCoordinator:
@@ -34,6 +35,7 @@ class MainCoordinator:
         # The model_name parameter is ignored by these agents
         self.page_analyzer = PageAnalyzer(model_name=None)  # Ignored - uses FIXED_MODEL_NAME
         self.story_summarizer = StorySummarizer(model_name=None)  # Ignored - uses FIXED_MODEL_NAME
+        self.image_selector = ImageSelector()
         
         # Only ScriptGenerator uses the user-selected model
         self.script_generator = ScriptGenerator(model_name=model_name, temperature=temperature)
@@ -42,7 +44,7 @@ class MainCoordinator:
         """
         Returns information about the models being used by different agents.
         """
-        return f"ScriptGenerator: {self.script_model_name or config.DEFAULT_SCRIPT_MODEL}, Fixed agents (PageAnalyzer, StorySummarizer): {config.FIXED_MODEL_NAME}"
+        return f"ScriptGenerator: {self.script_model_name or config.DEFAULT_SCRIPT_MODEL}, Fixed agents (PageAnalyzer, StorySummarizer, ImageSelector): {config.FIXED_MODEL_NAME}"
     
     def process_comic(self, comic_path: str, output_dir: str, youtube_transcript: str = "", target_min_words: int = 300, target_max_words: int = 350) -> dict:
         """
@@ -60,7 +62,7 @@ class MainCoordinator:
             # Log the actual processing details
             print(f"📋 PROCESSING DETAILS:")
             print(f"   • ScriptGenerator model: {self.script_model_name or config.DEFAULT_SCRIPT_MODEL}")
-            print(f"   • Fixed agents model (PageAnalyzer, StorySummarizer): {config.FIXED_MODEL_NAME}")
+            print(f"   • Fixed agents model (PageAnalyzer, StorySummarizer, ImageSelector): {config.FIXED_MODEL_NAME}")
             print(f"   • Word target range: {target_min_words} - {target_max_words}")
             print(f"   • YouTube transcript: {'Yes' if youtube_transcript.strip() else 'No'}")
             print(f"   • Comic path: {comic_path}")
@@ -75,6 +77,7 @@ class MainCoordinator:
             analyses_file = comic_output_dir / "page_analyses.json"
             summary_file = comic_output_dir / "summary.txt"
             final_report_file = comic_output_dir / "final_report.md"
+            selected_pages_file = comic_output_dir / "selected_pages.json"
             
             # Extract images
             print("🚀 Starting: Extracting images from comic for analysis...")
@@ -125,25 +128,50 @@ class MainCoordinator:
                 json.dump(script_data, f, indent=2, ensure_ascii=False)
             print("✅ Finished: Generating final script.")
             
+            # Select images based on script
+            print("🚀 Starting: Selecting images based on the script...")
+            # Determine desired segments: use word count and approximate speaking rate (~3 words/sec)
+            script_text = script_data.get('script', '')
+            script_word_count = count_words(script_text)
+            # Aim for 4-10 seconds per segment -> 12-30 words per segment (3 words/sec)
+            avg_words_per_segment = 18  # choose a midpoint (approx 6 seconds)
+            estimated_segments = max(1, int(max(1, script_word_count / avg_words_per_segment)))
+            # Cap segments to keep video short (for 90s video, ~12 segments max at 7.5s each). We'll be conservative.
+            cap_segments = min(12, estimated_segments)
+
+            selected_page_pairs = self.image_selector.select_images(
+                script_text,
+                story_analyses,
+                max_segments=cap_segments,
+                min_seconds=4,
+                max_seconds=10
+            )
+            with open(selected_pages_file, 'w', encoding='utf-8') as f:
+                json.dump(selected_page_pairs, f, indent=2)
+            print(f"✅ Finished: Selected {len(selected_page_pairs)} page-text pairs for the video.")
+
             # Generate comprehensive report
             self._generate_final_report(
                 final_report_file, base_name, script_data, 
                 story_summary, story_analyses, youtube_transcript,
-                target_min_words, target_max_words, len(all_analyses), len(story_analyses)
+                target_min_words, target_max_words, len(all_analyses), len(story_analyses),
+                selected_page_pairs
             )
-            
+
             return {
                 'success': True,
                 'script_data': script_data,
                 'story_summary': story_summary,
                 'analyses': all_analyses,
                 'story_analyses': story_analyses,
+                'selected_pages': selected_page_pairs,
                 'output_files': {
                     'script': str(script_file),
                     'report': str(final_report_file),
                     'summary': str(summary_file),
                     'analyses': str(analyses_file),
-                    'story_analyses': str(story_analyses_file)
+                    'story_analyses': str(story_analyses_file),
+                    'selected_pages': str(selected_pages_file)
                 }
             }
             
@@ -170,7 +198,7 @@ class MainCoordinator:
     def _generate_final_report(self, report_file, base_name, script_data, 
                               story_summary, story_analyses, youtube_transcript,
                               target_min_words=300, target_max_words=350, 
-                              total_pages=None, story_pages=None):
+                              total_pages=None, story_pages=None, selected_pages=None):
         """Generate comprehensive final report"""
         script_word_count = count_words(script_data.get('script', ''))
         summary_word_count = count_words(story_summary)
@@ -192,6 +220,12 @@ class MainCoordinator:
                 f.write(f"- **Story pages identified:** {story_pages}\n")
                 f.write(f"- **Non-story pages filtered:** {filtered_pages}\n")
                 f.write(f"- **Story page percentage:** {(story_pages/total_pages)*100:.1f}%\n\n")
+
+            if selected_pages:
+                f.write("## 🖼️ Selected Pages for Video\n\n")
+                f.write(f"Selected {len(selected_pages)} page-text pairs based on the script:\n\n")
+                for pair in selected_pages:
+                    f.write(f"- **Page {pair.get('page_number')}**: {pair.get('text')}\n\n")
 
             f.write("## 📜 Final Script\n\n")
             f.write(f"**Title Suggestions:**\n{script_data.get('title_suggestions', 'N/A')}\n\n")
