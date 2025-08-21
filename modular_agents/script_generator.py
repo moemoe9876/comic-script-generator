@@ -13,7 +13,7 @@ class ScriptGenerator:
     """
     Generates a YouTube script from a story summary.
     """
-    def __init__(self, model_name: str = None, temperature: float | None = None):
+    def __init__(self, model_name: str = None, temperature: float | None = None, api_key: str = None):
         """
         Initialize the ScriptGenerator.
         
@@ -21,8 +21,10 @@ class ScriptGenerator:
             model_name: Model name to use for script generation. If None, uses default.
                        This is the only agent that respects user model selection.
             temperature: Creativity level for script generation. If None, uses default 0.5.
+            api_key: The Gemini API key. If not provided, it will be read from the
+                     environment variable.
         """
-        genai.configure(api_key=config.GEMINI_API_KEY)
+        genai.configure(api_key=api_key or config.GEMINI_API_KEY)
         generation_config = genai.types.GenerationConfig(
             temperature=(temperature if temperature is not None else 0.5),  # Configurable creativity
             top_p=0.1,       # Allow more diverse token selections

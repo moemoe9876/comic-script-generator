@@ -11,15 +11,17 @@ class StorySummarizer:
     """
     Generates a story summary from a list of page analyses.
     """
-    def __init__(self, model_name: str = None):
+    def __init__(self, model_name: str = None, api_key: str = None):
         """
         Initialize the StorySummarizer.
         
         Args:
             model_name: This parameter is ignored. StorySummarizer always uses gemini-2.0-flash
                        as per system requirements to ensure consistent story summarization.
+            api_key: The Gemini API key. If not provided, it will be read from the
+                     environment variable.
         """
-        genai.configure(api_key=config.GEMINI_API_KEY)
+        genai.configure(api_key=api_key or config.GEMINI_API_KEY)
         # Configure model with low temperature to reduce hallucinations
         generation_config = genai.types.GenerationConfig(
             temperature=0.1,  # Low temperature for more focused, less creative output

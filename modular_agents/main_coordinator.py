@@ -16,7 +16,7 @@ class MainCoordinator:
     """
     Coordinates the entire comic-to-script pipeline.
     """
-    def __init__(self, model_name=None, temperature: float | None = None):
+    def __init__(self, model_name=None, temperature: float | None = None, api_key: str = None):
         """
         Initialize the MainCoordinator.
         
@@ -25,6 +25,7 @@ class MainCoordinator:
                        (ImageExtractor, PageAnalyzer, StorySummarizer) always use 
                        gemini-2.0-flash as hardcoded per system requirements.
             temperature: Temperature setting ONLY for ScriptGenerator.
+            api_key: The Gemini API key to be used by the agents.
         """
         self.script_model_name = model_name  # Store only for ScriptGenerator
         
@@ -33,12 +34,16 @@ class MainCoordinator:
         
         # These three agents always use gemini-2.0-flash (hardcoded)
         # The model_name parameter is ignored by these agents
-        self.page_analyzer = PageAnalyzer(model_name=None)  # Ignored - uses FIXED_MODEL_NAME
-        self.story_summarizer = StorySummarizer(model_name=None)  # Ignored - uses FIXED_MODEL_NAME
+        self.page_analyzer = PageAnalyzer(model_name=None, api_key=api_key)  # Ignored - uses FIXED_MODEL_NAME
+        self.story_summarizer = StorySummarizer(model_name=None, api_key=api_key)  # Ignored - uses FIXED_MODEL_NAME
         self.image_selector = ImageSelector()
         
         # Only ScriptGenerator uses the user-selected model
-        self.script_generator = ScriptGenerator(model_name=model_name, temperature=temperature)
+        self.script_generator = ScriptGenerator(
+            model_name=model_name, 
+            temperature=temperature, 
+            api_key=api_key
+        )
     
     def get_actual_model_name(self) -> str:
         """

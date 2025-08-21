@@ -192,12 +192,19 @@ def main():
     with st.sidebar:
         st.markdown("### ⚙️ Configuration")
         
-        # API Key check
-        if GEMINI_API_KEY:
-            st.success("✅ Gemini API Key configured")
-        else:
-            st.error("❌ Gemini API Key not found in config")
+        # API Key Input
+        st.markdown("### 🔑 Gemini API Key")
+        user_api_key = st.text_input(
+            "Enter your Gemini API Key:",
+            type="password",
+            help="Your API key is required to process comics."
+        )
+
+        if not user_api_key:
+            st.warning("Please enter your Gemini API Key to proceed.")
             st.stop()
+        
+        st.success("✅ Gemini API Key entered")
         
         st.markdown("---")
         
@@ -341,6 +348,7 @@ def main():
         
         # Store in session state
         st.session_state['uploaded_file'] = uploaded_file
+        st.session_state['user_api_key'] = user_api_key
         st.session_state['generation_temperature'] = generation_temperature
     # No max_pages stored anymore — process all extracted pages
         st.session_state['transcript_text'] = transcript_text if use_transcript else ""
@@ -418,6 +426,7 @@ def main():
                             # Get processing parameters
                             selected_model = st.session_state.get('model_name')
                             temperature = st.session_state.get('generation_temperature')
+                            api_key = st.session_state.get('user_api_key')
                             
                             # Validate model selection
                             valid_models = [
@@ -454,7 +463,8 @@ def main():
                             try:
                                 coordinator = MainCoordinator(
                                     model_name=selected_model,  # Only affects ScriptGenerator
-                                    temperature=temperature
+                                    temperature=temperature,
+                                    api_key=api_key
                                 )
                             except Exception as e:
                                 st.error(f"❌ Failed to initialize processing coordinator: {str(e)}")
